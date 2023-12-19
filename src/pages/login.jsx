@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { Button } from '@/components/Button';
+import Head from 'next/head';
 
 export default function Login() {
     // Hook
@@ -39,6 +40,10 @@ export default function Login() {
 
     return (
         <>
+            <Head>
+                <title>Motivation - Login</title>
+            </Head>
+
             {!user && (
                 <div className="flex min-h-full flex-1 items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
                     <div className="w-full max-w-sm space-y-10">

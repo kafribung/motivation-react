@@ -9,8 +9,8 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/Button';
 import { useAuth } from '@/hooks/useAuth';
 import LoadingCard from '@/components/LoadingCard';
-import { getReminders } from '@/lib/getReminder';
 import Select from '@/components/Select';
+import { getMotivations } from '@/lib/getMotivation';
 
 function LinkIcon(props) {
     return (
@@ -30,7 +30,7 @@ export default function Index() {
     // Var local
     const [flashMessage, setFlashMessage] = useState('');
     const [limit, setLimit] = useState(10);
-    const [reminders, setReminders] = useState([]);
+    const [motivations, setMotivations] = useState([]);
 
     useEffect(() => {
         // Get success_message from local_storage
@@ -39,30 +39,30 @@ export default function Index() {
         // Set success_message to state
         if (successMessage) {
             setFlashMessage(successMessage);
+
+            // Remove success_message from local_storage
+            localStorage.removeItem('successMessage');
         }
 
-        // Remove success_message from local_storage
-        localStorage.removeItem('successMessage');
-
-        const fetchDataReminders = async () => {
+        const fetchDataMotivations = async () => {
             try {
-                const data = await getReminders(limit);
-                setReminders(data);
+                const data = await getMotivations(limit);
+                setMotivations(data);
             } catch (error) {}
         };
-        fetchDataReminders();
+        fetchDataMotivations();
     }, [limit]);
 
     return (
         <>
             <Head>
-                <title>Remindme</title>
+                <title>Motivation</title>
                 <meta name="description" content="Things I’ve made trying to put my dent in the universe." />
             </Head>
 
             <SimpleLayout
-                title="RemindMe is an intuitive and useful application designed to help users organize and remember events and tasks in everyday life."
-                intro="With the ability to set reminders at specific times, this app ensures that no important moment is missed. RemindMe allows users to take notes, plan meetings, and organize schedules easily, providing an efficient and effective user experience"
+                title="Inspiring Success Stories."
+                intro="Motivational apps often present success stories from various walks of life. By reading or listening to the experiences of those who have overcome obstacles, users can find inspiration and motivation to face their own challenges. Positive quotes and motivational thoughts provide additional fuel for spirit and self-confidence."
             >
                 {flashMessage && <Alert type="success" message={flashMessage} />}
 
@@ -80,40 +80,32 @@ export default function Index() {
                 />
 
                 {!loading && user && (
-                    <>
-                        <Button href="/reminder/create" className="mb-10 mt-5">
-                            Add Reminder
-                        </Button>
-
-                        <ul
-                            role="list"
-                            className="grid animate-pulse grid-cols-1 gap-x-12 gap-y-16 sm:grid-cols-2 lg:grid-cols-3"
-                        >
-                            {reminders &&
-                                reminders.map((reminder, index) => (
-                                    <Card as="li" key={index}>
-                                        <div className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md shadow-zinc-800/5 ring-1 ring-zinc-900/5 dark:border dark:border-zinc-700/50 dark:bg-zinc-800 dark:ring-0">
-                                            <Image src={logoPlanetaria} alt="" className="h-8 w-8" unoptimized />
-                                        </div>
-                                        <Card.Cta>{reminder.data.reminders.remind_at}</Card.Cta>
-                                        <h2 className="mt-6 text-base font-semibold text-zinc-800 dark:text-zinc-100">
-                                            <Card.Link href={`reminder/${reminder.data.reminders.id}`}>
-                                                {reminder.data.reminders.title}
-                                            </Card.Link>
-                                        </h2>
-                                        <Card.Description>{reminder.data.reminders.description}</Card.Description>
-                                        <p className="relative z-10 mt-6 flex text-sm font-medium text-zinc-400 transition group-hover:text-teal-500 dark:text-zinc-200">
-                                            <LinkIcon className="h-6 w-6 flex-none" />
-                                            <span className="ml-2">
-                                                {reminder.data.reminders.user} -
-                                                {reminder.data.reminders.sent_email ? 'send' : ''}
-                                            </span>
-                                        </p>
-                                    </Card>
-                                ))}
-                        </ul>
-                    </>
+                    <Button href="/motivation/create" className="mb-10 mt-5">
+                        Add Motivation
+                    </Button>
                 )}
+                <ul
+                    role="list"
+                    className="mt-10 grid animate-pulse grid-cols-1 gap-x-12 gap-y-16 sm:grid-cols-2 lg:grid-cols-3"
+                >
+                    {motivations &&
+                        motivations.map((motivation, index) => (
+                            <Card as="li" key={index}>
+                                <div className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md shadow-zinc-800/5 ring-1 ring-zinc-900/5 dark:border dark:border-zinc-700/50 dark:bg-zinc-800 dark:ring-0">
+                                    <Image src={logoPlanetaria} alt="" className="h-8 w-8" unoptimized />
+                                </div>
+                                <Card.Cta>{motivation.created_at}</Card.Cta>
+                                <h2 className="mt-6 text-base font-semibold text-zinc-800 dark:text-zinc-100">
+                                    <Card.Link href={`motivation/${motivation.slug}`}>{motivation.name}</Card.Link>
+                                </h2>
+                                <Card.Description>{motivation.description}</Card.Description>
+                                <p className="relative z-10 mt-6 flex text-sm font-medium text-zinc-400 transition group-hover:text-teal-500 dark:text-zinc-200">
+                                    <LinkIcon className="h-6 w-6 flex-none" />
+                                    <span className="ml-2">{motivation.user}</span>
+                                </p>
+                            </Card>
+                        ))}
+                </ul>
             </SimpleLayout>
         </>
     );

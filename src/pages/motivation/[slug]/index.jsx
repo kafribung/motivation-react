@@ -4,13 +4,13 @@ import { Card } from '@/components/Card';
 import { Section } from '@/components/Section';
 import { SimpleLayout } from '@/components/SimpleLayout';
 import { useEffect, useState } from 'react';
-import { deleteReminder, getReminder } from '@/lib/getReminder';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/Button';
 import Alert from '@/components/Alert';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
+import { deleteMotivation, getMotivation } from '@/lib/getMotivation';
 
 function ToolsSection({ children, ...props }) {
     return (
@@ -33,7 +33,7 @@ function Tool({ title, href, children }) {
     );
 }
 
-export default function ReminderShow() {
+export default function MotivationShow() {
     // Hook
     const { loading, user } = useAuth();
 
@@ -41,8 +41,8 @@ export default function ReminderShow() {
     const router = useRouter();
 
     // Local var
-    const { id } = router.query;
-    const [reminder, setReminder] = useState([]);
+    const { slug } = router.query;
+    const [motivation, setMotivation] = useState({});
     const [flashMessage, setFlashMessage] = useState('');
     // End Local Var
 
@@ -59,22 +59,23 @@ export default function ReminderShow() {
         // Set success_message to state
         if (successMessage) {
             setFlashMessage(successMessage);
+
+            // Remove success_message from local_storage
+            localStorage.removeItem('successMessage');
         }
 
-        // Remove success_message from local_storage
-        localStorage.removeItem('successMessage');
-
         // Fetch data
-        const fetchDataReminder = async () => {
+        const fetchDataMotivation = async () => {
             try {
-                const response = await getReminder(id);
-                const formatRemindAt = response.reminders.remind_at.split(' ')[0];
-                setReminder({ ...response.reminders, remind_at: formatRemindAt });
+                const data = await getMotivation(slug);
+                setMotivation(data);
             } catch (error) {}
         };
-        fetchDataReminder();
+        fetchDataMotivation();
         // End fetch data
-    }, [user, loading, router, id]);
+    }, [user, loading, router, slug]);
+
+    const isSuperAdmin = user?.roles.some((role) => role.name === 'super_admin');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -84,7 +85,7 @@ export default function ReminderShow() {
 
         const result = await MySwal.fire({
             title: 'Are you sure?',
-            text: 'You will not be able to recover this remind!',
+            text: 'You will not be able to recover this motivation!',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Yes, delete it!',
@@ -94,49 +95,51 @@ export default function ReminderShow() {
         // if "Yes"
         if (result.isConfirmed) {
             try {
-                await deleteReminder(id);
+                await deleteMotivation(slug);
 
                 //Set alert
-                localStorage.setItem('successMessage', 'Reminder deleted successfully!');
+                localStorage.setItem('successMessage', 'Motivation deleted successfully!');
                 router.push('/');
             } catch (error) {
                 MySwal.fire({
                     icon: 'error',
                     title: 'Oops...',
-                    text: 'Something went wrong while deleting the reminder!',
+                    text: 'Something went wrong while deleting the motivation!',
                 });
             }
         }
     };
+
     return (
         <>
             <Head>
-                <title>Remindme-Show</title>
+                <title>Motivation - Show</title>
                 <meta name="description" content="Software I use, gadgets I love, and other things I recommend." />
             </Head>
             <SimpleLayout
-                title="Software I use, gadgets I love, and other things I recommend."
-                intro="I get asked a lot about the things I use to build software, stay productive, or buy to fool myself into thinking I’m being productive when I’m really just procrastinating. Here’s a big list of all of my favorite stuff."
+                title="Community Support and Positive Notifications."
+                intro="Motivational apps create a space for collaboration and social support. Through community features, users can share their journeys, inspire one another, and celebrate achievements together. Positive notifications set by users help maintain high motivation levels, reminding them of the steps that need to be taken.."
             >
                 {flashMessage && <Alert type="success" message={flashMessage} />}
 
-                <div className="space-y-20">
-                    <ToolsSection title="Reminder Me">
-                        <Tool title={reminder.title}>{reminder.description}</Tool>
-                        <Tool className="text-xs" title={reminder.remind_at}>
-                            Author: {reminder.user}
-                        </Tool>
-                        <Tool className="text-xs" title="Status">
-                            Sent: {reminder.sent_email ? 'Yes' : 'No'}
-                        </Tool>
-                        <Button href={`/reminder/${reminder.id}/edit`} className="m-2">
-                            Edit
-                        </Button>
-                        <Button onClick={handleSubmit} variant="danger">
-                            Delete
-                        </Button>
-                    </ToolsSection>
-                </div>
+                {motivation && (
+                    <div className="space-y-20">
+                        <ToolsSection title="Motivation">
+                            <Tool title={motivation.name}>{motivation.description}</Tool>
+                            <Tool className="text-xs" title={motivation.created_at}>
+                                Author: {motivation.user}
+                            </Tool>
+                            <Button href={`/motivation/${motivation.slug}/edit`} className="m-2">
+                                Edit
+                            </Button>
+                            {isSuperAdmin && (
+                                <Button onClick={handleSubmit} variant="danger">
+                                    Delete
+                                </Button>
+                            )}
+                        </ToolsSection>
+                    </div>
+                )}
             </SimpleLayout>
         </>
     );

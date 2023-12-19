@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
                     getAxios.defaults.headers.Authorization = `Bearer ${access_token}`
                     const response = await getAxios.get('/user')
                     if (response) {
-                        setUser(response)
+                        setUser(response.data.data)
                         setError(null)
                     }
                 }
@@ -36,23 +36,19 @@ export const AuthProvider = ({ children }) => {
         checkAuth()
     }, [])
 
-    // CSRF
-    const csrf = () => getAxios.get('/sanctum/csrf-cookie')
-
     // Login
     const login = async (credentials) => {
         try {
-            await csrf()
             const response = await getAxios.post('/login', credentials)
-            const { data: { access_token, user } } = response.data
+            const { data: { user, token } } = response.data
 
-            if (access_token) {
-                Cookies.set('access_token', access_token, { expires: 1 })
+            if (token) {
+                Cookies.set('access_token', token, { expires: 1 })
                 setUser(user)
                 router.push('/')
             }
         } catch (error) {
-            setError(error.response.data.msg)
+            setError(error.response.data.message)
         }
     }
 
@@ -63,7 +59,7 @@ export const AuthProvider = ({ children }) => {
             if (access_token) {
                 getAxios.defaults.headers.Authorization = `Bearer ${access_token}`
                 const response = await getAxios.post('/logout')
-                if (response) {
+                if (response?.data) {
                     setUser(null)
                     Cookies.remove('access_token', { expires: 1 })
                     router.push('/')

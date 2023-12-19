@@ -4,44 +4,31 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/router';
 import { Button } from '@/components/Button';
-import { getReminder, updateReminder } from '@/lib/getReminder';
+import { storeMotivation } from '@/lib/getMotivation';
 
-export default function ReminderEdit() {
+export default function MotivationCreate() {
     // Hook
-    const { loading, user } = useAuth();
+    const { user, loading } = useAuth();
 
     // Router
     const router = useRouter();
 
     // Var local
     const [form, setForm] = useState({
-        title: '',
+        name: '',
         description: '',
-        remind_at: '',
     });
-
-    const { id } = router.query;
 
     const [errors, setErrors] = useState([]);
     // End Var local
 
+    // Auth
     useEffect(() => {
-        // Auth
         if (!loading && !user) {
             router.push('/login');
         }
-
-        // Fetch data
-        const fetchDataReminder = async () => {
-            try {
-                const response = await getReminder(id);
-                const formatRemindAt = response.reminders.remind_at.split(' ')[0];
-                setForm({ ...response.reminders, remind_at: formatRemindAt });
-            } catch (error) {}
-        };
-        fetchDataReminder();
-        // End fetch data
-    }, [user, loading, router, id]);
+    }, [user, loading, router]);
+    // Auth
 
     // Form
     const handleOnChange = (e) => {
@@ -52,62 +39,60 @@ export default function ReminderEdit() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // State reminders
-        const response = await updateReminder(form, id);
 
-        if (response.response?.data.errors) setErrors(response.response.data.errors);
+        // State motivation
+        const response = await storeMotivation(form);
+
+        if (response?.errors) setErrors(response.errors);
         else {
             setForm({
-                title: '',
-                escription: '',
-                remind_at: '',
+                name: '',
+                description: '',
             });
             // Flash message
-            localStorage.setItem('successMessage', 'Reminder updated successfully!');
-            router.push(`/reminder/${id}`);
+            localStorage.setItem('successMessage', 'Motivation created successfully!');
+            router.push('/');
         }
-        // End State reminders
+        // End State motivation
     };
-    // End form
 
+    // End form
     return (
         <>
             <Head>
-                <title>Remindme-Edit</title>
+                <title>Motivation - Create</title>
                 <meta name="description" content="Things I’ve made trying to put my dent in the universe." />
             </Head>
+
             <SimpleLayout
-                title="Write down anything that worries you."
-                intro="With user-friendly features and the ability to customize reminder settings, RemindMe makes an ideal partner to help users stay organized and connected to their agenda"
+                title="Setting and Tracking Goals."
+                intro="One key feature of motivational apps is helping users set their goals. By detailing these goals, the app provides clear direction, making the journey towards success feel more organized. Progress tracking features help users monitor their advancements over time, offering a better understanding of the achievements they've made."
             >
                 <form onSubmit={handleSubmit}>
                     <div className="space-y-12">
                         <div className="grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-12 md:grid-cols-3">
                             <div>
-                                <h2 className="text-base font-semibold leading-7 text-gray-900">Reminder edit</h2>
+                                <h2 className="text-base font-semibold leading-7 text-gray-900">Motivation create</h2>
                                 <p className="mt-1 text-sm leading-6 text-gray-600">Complete form below</p>
                             </div>
 
                             <div className="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2">
                                 <div className="sm:col-span-4">
-                                    <label
-                                        htmlFor="title"
-                                        className="block text-sm font-medium leading-6 text-gray-900"
-                                    >
+                                    <label htmlFor="name" className="block text-sm font-medium leading-6 text-gray-900">
                                         Title
                                     </label>
                                     <div className="mt-2">
                                         <input
-                                            id="title"
-                                            name="title"
+                                            id="name"
+                                            name="name"
                                             type="text"
-                                            autoComplete="title"
+                                            autoComplete="name"
                                             className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                            value={form.title}
+                                            value={form.name}
                                             onChange={handleOnChange}
                                         />
                                     </div>
-                                    {errors.title && <p className="text-sm text-red-600">{errors.title}</p>}
+                                    {errors.name && <p className="text-sm text-red-600">{errors.name}</p>}
                                 </div>
 
                                 <div className="col-span-full">
@@ -129,35 +114,15 @@ export default function ReminderEdit() {
                                     </div>
                                     {errors.description && <p className="text-sm text-red-600">{errors.description}</p>}
                                     <p className="mt-3 text-sm leading-6 text-gray-600">
-                                        Write a few sentences about yourself.
+                                        Write a few motivation about yourself.
                                     </p>
-                                </div>
-                                <div className="sm:col-span-3">
-                                    <label
-                                        htmlFor="remind-at"
-                                        className="block text-sm font-medium leading-6 text-gray-900"
-                                    >
-                                        Remind date
-                                    </label>
-                                    <div className="mt-2">
-                                        <input
-                                            type="date"
-                                            name="remind_at"
-                                            id="remind-at"
-                                            autoComplete="remind-at"
-                                            className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                            value={form.remind_at}
-                                            onChange={handleOnChange}
-                                        />
-                                    </div>
-                                    {errors.remind_at && <p className="text-sm text-red-600">{errors.remind_at}</p>}
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div className="mt-6 flex items-center justify-end gap-x-6">
-                        <Button type="submit">Save</Button>
+                        <Button type="submit">Create</Button>
                     </div>
                 </form>
             </SimpleLayout>
